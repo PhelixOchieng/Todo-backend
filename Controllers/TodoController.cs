@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Microsoft.EntityFrameworkCore;
 
 using Todo.Context;
@@ -47,54 +45,46 @@ namespace Todo.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<ActionResult<TodoItem>> PatchTodoItem(
-            long id,
-            JsonPatchDocument<TodoItem> patch
-        )
+        public async Task<ActionResult<TodoItem>> PPatchTodoItem(long id, TodoItemPatchDTO todoDTO)
         {
             if (await _context.TodoItems.FindAsync(id) is not TodoItem todoItem)
                 return NotFound();
 
-            patch.ApplyTo(todoItem, ModelState);
-						todoItem.UpdatedAt = DateTime.UtcNow;
-            if (!TryValidateModel(todoItem))
-                return BadRequest(ModelState);
+            todoItem.Title =  todoDTO.Title ?? todoItem.Title;
+            todoItem.Description = todoDTO.Description ?? todoItem.Description;
+            todoItem.IsCompleted = todoDTO.IsCompleted ?? todoItem.IsCompleted;
+            todoItem.UpdatedAt = DateTime.UtcNow;
 
-            _context.Entry(todoItem).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-
-            return todoItem;
+						await _context.SaveChangesAsync();
+						return todoItem;
         }
 
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTodoItem(long id, TodoItem todoItem)
+        public async Task<ActionResult<TodoItem>> PutTodoItem(long id, TodoItemUpdateDTO todoDTO)
         {
-            Console.WriteLine($"Todo: {id} -> {todoItem.Id}");
-            if (id != todoItem.Id)
-            {
+            Console.WriteLine($"Todo: {id} -> {todoDTO.Id}");
+            if (id != todoDTO.Id)
                 return BadRequest();
-            }
 
-            _context.Entry(todoItem).State = EntityState.Modified;
+            if (await _context.TodoItems.FindAsync(id) is not TodoItem todoItem)
+                return NotFound();
+
+            todoItem.Title = todoDTO.Title;
+            todoItem.Description = todoDTO.Description;
+            todoItem.IsCompleted = todoDTO.IsCompleted;
+            todoItem.UpdatedAt = DateTime.UtcNow;
 
             try
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException) when (!TodoItemExists(id))
             {
-                if (!TodoItemExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return NotFound();
             }
 
-            return NoContent();
+            return todoItem;
         }
 
         // POST: api/Todo
@@ -107,7 +97,7 @@ namespace Todo.Controllers
                 return Problem("Entity set 'TodoContext.TodoItems'  is null.");
             }
 
-						todoItem.CreatedAt = DateTime.UtcNow;
+            todoItem.CreatedAt = DateTime.UtcNow;
             _context.TodoItems.Add(todoItem);
             await _context.SaveChangesAsync();
 
