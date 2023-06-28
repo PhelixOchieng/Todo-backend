@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.HttpLogging;
 
 using Todo.Context;
+using Todo.Filters;
 
 // Load .env* environment variables
 var rootDir = Directory.GetCurrentDirectory();
@@ -8,12 +9,19 @@ DotEnv.Load(rootDir);
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers();
+// Add controller service
+builder.Services.AddControllers(opts =>
+{
+    opts.Filters.Add<GlobalResponseFilter>();
+});
+
+// Add DB service
 builder.Services.AddDbContext<TodoContext>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Configure request logging
 builder.Services.AddHttpLogging(logging =>
 {
     logging.LoggingFields =
