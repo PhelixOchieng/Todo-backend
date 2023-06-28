@@ -10,10 +10,9 @@ DotEnv.Load(rootDir);
 var builder = WebApplication.CreateBuilder(args);
 
 // Add controller service
-builder.Services.AddControllers(opts =>
-{
-    opts.Filters.Add<GlobalResponseFilter>();
-});
+builder.Services
+    .AddControllers(opts => opts.Filters.Add<GlobalResponseFilter>())
+    .AddNewtonsoftJson();
 
 // Add DB service
 builder.Services.AddDbContext<TodoContext>();

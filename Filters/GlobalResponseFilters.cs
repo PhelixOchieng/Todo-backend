@@ -7,7 +7,6 @@ public class GlobalResponseFilter : IActionFilter
 {
     public void OnActionExecuted(ActionExecutedContext context)
     {
-			Console.WriteLine("Called");
         if (context.Result is not ObjectResult objectResult)
             return;
 
@@ -24,5 +23,5 @@ public class GlobalResponseFilter : IActionFilter
         };
     }
 
-		public void OnActionExecuting(ActionExecutingContext context) {}
+    public void OnActionExecuting(ActionExecutingContext context) { }
 }

@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Microsoft.EntityFrameworkCore;
+
 using Todo.Context;
 using Todo.Models;
 
@@ -16,7 +19,6 @@ namespace Todo.Controllers
             _context = context;
         }
 
-        // GET: api/Todo
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems()
         {
@@ -27,7 +29,6 @@ namespace Todo.Controllers
             return await _context.TodoItems.OrderByDescending(i => i.CreatedAt).ToListAsync();
         }
 
-        // GET: api/Todo/5
         [HttpGet("{id}")]
         public async Task<ActionResult<TodoItem>> GetTodoItem(long id)
         {
@@ -45,11 +46,31 @@ namespace Todo.Controllers
             return todoItem;
         }
 
-        // PUT: api/Todo/5
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<TodoItem>> PatchTodoItem(
+            long id,
+            JsonPatchDocument<TodoItem> patch
+        )
+        {
+            if (await _context.TodoItems.FindAsync(id) is not TodoItem todoItem)
+                return NotFound();
+
+            patch.ApplyTo(todoItem, ModelState);
+						todoItem.UpdatedAt = DateTime.UtcNow;
+            if (!TryValidateModel(todoItem))
+                return BadRequest(ModelState);
+
+            _context.Entry(todoItem).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return todoItem;
+        }
+
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTodoItem(long id, TodoItem todoItem)
         {
+            Console.WriteLine($"Todo: {id} -> {todoItem.Id}");
             if (id != todoItem.Id)
             {
                 return BadRequest();
@@ -85,6 +106,8 @@ namespace Todo.Controllers
             {
                 return Problem("Entity set 'TodoContext.TodoItems'  is null.");
             }
+
+						todoItem.CreatedAt = DateTime.UtcNow;
             _context.TodoItems.Add(todoItem);
             await _context.SaveChangesAsync();
 
