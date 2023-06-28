@@ -9,6 +9,18 @@ DotEnv.Load(rootDir);
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Setup cors
+string AllowAllOriginsPolicy = "_AllowAllOrigins";
+string AllowSelectOriginsPolicy = "_AllowSelectOrigins";
+builder.Services.AddCors(opts =>
+{
+    opts.AddPolicy(name: AllowAllOriginsPolicy, policy => policy.AllowAnyOrigin().AllowAnyHeader());
+    opts.AddPolicy(
+        name: AllowSelectOriginsPolicy,
+        policy => policy.WithOrigins("https://todos.com")
+    );
+});
+
 // Add controller service
 builder.Services.AddControllers(opts => opts.Filters.Add<GlobalResponseFilter>());
 
@@ -30,12 +42,18 @@ builder.Services.AddHttpLogging(logging =>
 
 var app = builder.Build();
 app.UseHttpLogging();
+app.UseRouting();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors(AllowAllOriginsPolicy);
+}
+else
+{
+    app.UseCors(AllowAllOriginsPolicy);
 }
 
 app.UseAuthorization();
