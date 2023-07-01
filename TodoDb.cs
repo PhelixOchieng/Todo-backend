@@ -11,8 +11,6 @@ public class TodoContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         string dbURL = parseDBURLFromEnv();
-        Console.WriteLine($"DATABASE URL={dbURL}");
-
         optionsBuilder.UseNpgsql(dbURL).UseSnakeCaseNamingConvention();
     }
 

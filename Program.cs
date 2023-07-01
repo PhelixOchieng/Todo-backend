@@ -14,7 +14,10 @@ string AllowAllOriginsPolicy = "_AllowAllOrigins";
 string AllowSelectOriginsPolicy = "_AllowSelectOrigins";
 builder.Services.AddCors(opts =>
 {
-    opts.AddPolicy(name: AllowAllOriginsPolicy, policy => policy.AllowAnyOrigin().AllowAnyHeader());
+    opts.AddPolicy(
+        name: AllowAllOriginsPolicy,
+        policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
+    );
     opts.AddPolicy(
         name: AllowSelectOriginsPolicy,
         policy => policy.WithOrigins("https://todos.com")

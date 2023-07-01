@@ -1,12 +1,9 @@
 namespace Todo.Models;
 
-public class TodoItem
-{
-    public long Id { get; set; }
-    public string Title { get; set; } = null!;
-		public bool IsCompleted { get; set; } = false;
-    public string? Description { get; set; }
-
-		public DateTime CreatedAt { get; set; }
-		public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+public class TodoItem : Entity {
+  public string Title { get; set; } = null!;
+  public string? Description { get; set; }
+	public bool IsCompleted { get; set; } = false;
+  
+	public DateTime? CompletedAt { get; set; }
 }
