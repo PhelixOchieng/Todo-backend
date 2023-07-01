@@ -49,14 +49,12 @@ public class TodoController : ControllerBase {
 
     todoItem.Title = todoDTO.Title ?? todoItem.Title;
     todoItem.Description = todoDTO.Description ?? todoItem.Description;
-    todoItem.IsCompleted = todoDTO.IsCompleted ?? todoItem.IsCompleted;
     todoItem.UpdatedAt = DateTime.UtcNow;
 		
     await _context.SaveChangesAsync();
     return todoItem;
   }
 
-  // POST: api/Todo
   // To protect from overposting attacks, see
   // https://go.microsoft.com/fwlink/?linkid=2123754
   [HttpPost]
