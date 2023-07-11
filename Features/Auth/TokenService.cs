@@ -9,10 +9,10 @@ using Users.Models;
 namespace Auth.Service;
 
 public sealed class TokenService {
-  private const int _ExpirationDuration = 30; // Expiration duration in minutes
+  private const int _ExpirationDuration = 60 * 60 * 24 * 7; // Expiration duration in seconds
 
   public string CreateToken(User user) {
-    var expirationDate = DateTime.UtcNow.AddMinutes(_ExpirationDuration);
+    var expirationDate = DateTime.UtcNow.AddSeconds(_ExpirationDuration);
     var token = CreateJwtToken(CreateClaims(user), CreateSigninCredentials(),
                                expirationDate);
     var tokenHandler = new JwtSecurityTokenHandler();
