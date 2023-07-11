@@ -1,3 +1,5 @@
+using Application.Core.Models;
+
 namespace Todo.Models;
 
 public class TodoItem : Entity {

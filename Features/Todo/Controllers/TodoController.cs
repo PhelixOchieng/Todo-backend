@@ -1,17 +1,19 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-using Todo.Context;
+using Application.Core.Context;
 using Todo.Models;
 
 namespace Todo.Controllers;
 
-[Route("todos")]
 [ApiController]
+[Authorize]
+[Route("todos")]
 public class TodoController : ControllerBase {
-  private readonly TodoContext _context;
+  private readonly ApplicationDbContext _context;
 
-  public TodoController(TodoContext context) { _context = context; }
+  public TodoController(ApplicationDbContext context) { _context = context; }
 
   [HttpGet]
   public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems() {

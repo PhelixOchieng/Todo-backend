@@ -2,28 +2,28 @@
 
 #nullable disable
 
-namespace Todo.Migrations
+namespace Application.Migrations
 {
     /// <inheritdoc />
-    public partial class RemoveCompletedAt : Migration
+    public partial class RemovePasswordField : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "is_completed",
-                table: "todo_items");
+                name: "password",
+                table: "users");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
-                name: "is_completed",
-                table: "todo_items",
-                type: "boolean",
+            migrationBuilder.AddColumn<string>(
+                name: "password",
+                table: "users",
+                type: "text",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: "");
         }
     }
 }

@@ -478,3 +478,4 @@ $RECYCLE.BIN/
 
 .env
 .env*
+tmp/
