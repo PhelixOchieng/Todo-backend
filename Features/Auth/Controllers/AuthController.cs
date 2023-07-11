@@ -31,18 +31,18 @@ public class AuthController : ControllerBase {
 
     var managedUser = await _userManager.FindByEmailAsync(request.Email);
     if (managedUser is null) {
-			var problem = new ProblemDetails();
-			problem.Title = "Invalid email and/or password";
-			return Unauthorized(problem);
+      var problem = new ProblemDetails();
+      problem.Title = "Invalid email and/or password";
+      return Unauthorized(problem);
     }
 
     bool isPasswordValid =
         await _userManager.CheckPasswordAsync(managedUser, request.Password);
     if (!isPasswordValid) {
-			var problem = new ProblemDetails();
-			problem.Title = "Invalid email and/or password";
-			return Unauthorized(problem);
-		}
+      var problem = new ProblemDetails();
+      problem.Title = "Invalid email and/or password";
+      return Unauthorized(problem);
+    }
 
     User? user = await _context.Users.SingleOrDefaultAsync(
         user => user.Email == request.Email);
@@ -52,10 +52,7 @@ public class AuthController : ControllerBase {
     string accessToken = _tokenService.CreateToken(user);
     await _context.SaveChangesAsync();
 
-    return Ok(new AuthResponse {
-      Email = user.Email,
-      Token = accessToken,
-    });
+    return Ok(new AuthResponse { AccessToken = accessToken });
   }
 
   [HttpPost("signup")]
