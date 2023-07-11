@@ -26,8 +26,9 @@ string AllowAllOriginsPolicy = "_AllowAllOrigins";
 string AllowSelectOriginsPolicy = "_AllowSelectOrigins";
 builder.Services.AddCors(opts => {
   opts.AddPolicy(name: AllowAllOriginsPolicy,
-                 policy =>
-                     policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+                 policy => policy.AllowAnyOrigin()
+                               .AllowAnyMethod()
+                               .AllowAnyHeader());
   opts.AddPolicy(name: AllowSelectOriginsPolicy,
                  policy => policy.WithOrigins("https://todos.com"));
 });
@@ -82,22 +83,22 @@ builder.Services.AddHttpLogging(logging => {
 });
 
 var app = builder.Build();
-app.UseMiddleware<ResponseFormattingMiddleware>();
 
 app.UseHttpLogging();
 app.UseRouting();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
+  app.UseCors(AllowAllOriginsPolicy);
   app.UseSwagger();
   app.UseSwaggerUI();
-  app.UseCors(AllowAllOriginsPolicy);
 } else {
-  app.UseCors(AllowAllOriginsPolicy);
+  app.UseCors(AllowSelectOriginsPolicy);
 }
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<ResponseFormattingMiddleware>();
 app.MapControllers();
 
 app.Run();
