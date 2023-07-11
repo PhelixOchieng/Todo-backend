@@ -3,7 +3,6 @@ using System.Text;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.EntityFrameworkCore;
 
 using Application.Core.Context;
 using Application.Core.Middlewares;
@@ -45,6 +44,11 @@ builder.Services.AddSwaggerGen();
 // Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
+      string? secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+      if (secretKey == null)
+        throw new InvalidOperationException(
+            "The environment variable \"JWT_SECRET_KEY\" was not found.");
+
       options.TokenValidationParameters = new TokenValidationParameters() {
         ClockSkew = TimeSpan.Zero,
         ValidateIssuer = true,
@@ -53,8 +57,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidateIssuerSigningKey = true,
         ValidIssuer = "todoApp",
         ValidAudience = "todoApp",
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes("!SomethingSecret!")),
+        IssuerSigningKey =
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
       };
     });
 builder.Services

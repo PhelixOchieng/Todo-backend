@@ -37,9 +37,11 @@ public sealed class ResponseFormattingMiddleware : IMiddleware {
           } else {
             string responseBodyString =
                 await new StreamReader(responseBodyStream).ReadToEndAsync();
+						Console.WriteLine($"Response body: {responseBodyString}");
 
             JsonElement responseData =
                 JsonDocument.Parse(responseBodyString).RootElement;
+						Console.WriteLine($"Response data: {responseData}");
             string msgString = "An error occured";
             JsonElement msgElement = new JsonElement();
             if (responseData.TryGetProperty("title", out msgElement))
@@ -56,7 +58,6 @@ public sealed class ResponseFormattingMiddleware : IMiddleware {
               data = null;
             }
 
-            Console.WriteLine($"Response data: {responseData}");
             serializedResponse = BuildResponse(true, msgString, data);
           }
 

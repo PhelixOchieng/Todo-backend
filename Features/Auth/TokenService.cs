@@ -28,12 +28,12 @@ public sealed class TokenService {
   private List<Claim> CreateClaims(User user) {
     try {
       var claims = new List<Claim> {
-        new Claim(JwtRegisteredClaimNames.Sub, "TokenForTodoApp"),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        // new Claim(JwtRegisteredClaimNames.Sub, "TokenForTodoApp"),
+        // new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         new Claim(JwtRegisteredClaimNames.Iat,
                   DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)),
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim(ClaimTypes.Email, user.Email),
+        new Claim("userID", user.Id.ToString()),
+        new Claim("email", user.Email!),
       };
 
       return claims;
@@ -44,8 +44,13 @@ public sealed class TokenService {
   }
 
   private SigningCredentials CreateSigninCredentials() {
+    string? secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+    if (secretKey == null)
+      throw new InvalidOperationException(
+          "The environment variable \"JWT_SECRET_KEY\" was not found.");
+
     return new SigningCredentials(
-        new SymmetricSecurityKey(Encoding.UTF8.GetBytes("!SomethingSecret!")),
+        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
         SecurityAlgorithms.HmacSha256);
   }
 }
