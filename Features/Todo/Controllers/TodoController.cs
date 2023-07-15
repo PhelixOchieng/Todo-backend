@@ -16,12 +16,21 @@ public class TodoController : ControllerBase {
   public TodoController(ApplicationDbContext context) { _context = context; }
 
   [HttpGet]
-  public async Task<ActionResult<IEnumerable<TodoItemShallowAccessDTO>>> GetTodoItems() {
+  public async Task<ActionResult<IEnumerable<TodoItemShallowAccessDTO>>>
+  GetTodoItems() {
     if (_context.TodoItems == null) {
       return NotFound();
     }
-    return await _context.TodoItems.OrderByDescending(i => i.CreatedAt)
-			.Select(e => TodoItemShallowAccessDTO.FromEntity(e))
+
+    string? userId = HttpContext?.User.FindFirst("userID")?.Value;
+    if (userId == null) {
+      return Problem(null, null, StatusCodes.Status400BadRequest,
+                     "\"userID\" is missing from token");
+    }
+
+    return await _context.TodoItems.Where(i => i.UserId == userId)
+        .OrderByDescending(i => i.CreatedAt)
+        .Select(e => TodoItemShallowAccessDTO.FromEntity(e))
         .ToListAsync();
   }
 
@@ -83,7 +92,6 @@ public class TodoController : ControllerBase {
   PatchTodoItem(long id, TodoItemPatchDTO todoDTO) {
     if (await _context.TodoItems.FindAsync(id) is not TodoItem todo)
       return NotFound();
-    
 
     if (todoDTO.IsCompleted is true && !todo.IsCompleted)
       todo.CompletedAt = DateTime.UtcNow;
@@ -94,12 +102,12 @@ public class TodoController : ControllerBase {
     todo.Description = todoDTO.Description ?? todo.Description;
     todo.UpdatedAt = DateTime.UtcNow;
 
-		var createdBy = await _context.Users.FindAsync(todo.UserId);
+    var createdBy = await _context.Users.FindAsync(todo.UserId);
     if (createdBy == null) {
       throw new InvalidDataException(
           $"The user that created this todo, '{todo.Id}' doesnt exist");
     }
-		todo.CreatedBy = createdBy;
+    todo.CreatedBy = createdBy;
 
     await _context.SaveChangesAsync();
     return TodoItemDetailsAccessDTO.FromEntity(todo);
