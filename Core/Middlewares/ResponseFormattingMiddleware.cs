@@ -23,7 +23,7 @@ public sealed class ResponseFormattingMiddleware : IMiddleware {
         bool isMyJsonResponse = !requestUrl.StartsWith("/swagger");
 
         Console.WriteLine(
-            $"Content Type: {context.Response.ContentType} {isMyJsonResponse}");
+            $"Content Type: '{context.Response.ContentType}' {isMyJsonResponse}");
         if (isMyJsonResponse) {
           responseBodyStream.Seek(0, SeekOrigin.Begin);
           string serializedResponse = "";
@@ -32,16 +32,21 @@ public sealed class ResponseFormattingMiddleware : IMiddleware {
           if (isOkResponse) {
             string responseBodyString =
                 await new StreamReader(responseBodyStream).ReadToEndAsync();
-            var data = JsonDocument.Parse(responseBodyString).RootElement;
+
+            JsonElement? data = null;
+            if (!string.IsNullOrEmpty(responseBodyString)) {
+              data = JsonDocument.Parse(responseBodyString).RootElement;
+            }
+
             serializedResponse = BuildResponse(false, "success", data);
           } else {
             string responseBodyString =
                 await new StreamReader(responseBodyStream).ReadToEndAsync();
-						Console.WriteLine($"Response body: {responseBodyString}");
+            Console.WriteLine($"Response body: {responseBodyString}");
 
             JsonElement responseData =
                 JsonDocument.Parse(responseBodyString).RootElement;
-						Console.WriteLine($"Response data: {responseData}");
+            Console.WriteLine($"Response data: {responseData}");
             string msgString = "An error occured";
             JsonElement msgElement = new JsonElement();
             if (responseData.TryGetProperty("title", out msgElement))
@@ -70,6 +75,7 @@ public sealed class ResponseFormattingMiddleware : IMiddleware {
         responseBodyStream.Seek(0, SeekOrigin.Begin);
         await responseBodyStream.CopyToAsync(originalBodyStream);
       } catch (Exception e) {
+        Console.WriteLine("Error");
         _logger.LogError(e, e.Message);
 
         using MemoryStream responseErrorStream = new MemoryStream();
