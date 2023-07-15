@@ -44,25 +44,29 @@ public sealed class ResponseFormattingMiddleware : IMiddleware {
                 await new StreamReader(responseBodyStream).ReadToEndAsync();
             Console.WriteLine($"Response body: {responseBodyString}");
 
-            JsonElement responseData =
-                JsonDocument.Parse(responseBodyString).RootElement;
-            Console.WriteLine($"Response data: {responseData}");
-            string msgString = "An error occured";
-            JsonElement msgElement = new JsonElement();
-            if (responseData.TryGetProperty("title", out msgElement))
-              msgString = msgElement.ToString();
+						JsonElement? data = null;
+						string msgString = "An error occured";
 
-            JsonElement? data = null;
-            JsonElement dataElement = new JsonElement();
-            if (responseData.TryGetProperty("errors", out dataElement))
-              data = dataElement;
-            else
-              data = responseData;
-            if (context.Response.StatusCode == StatusCodes.Status404NotFound) {
-              msgString = "Resource not found";
-              data = null;
+            if (!string.IsNullOrEmpty(responseBodyString)) {
+              JsonElement responseData =
+                  JsonDocument.Parse(responseBodyString).RootElement;
+              Console.WriteLine($"Response data: {responseData}");
+              JsonElement msgElement = new JsonElement();
+              if (responseData.TryGetProperty("title", out msgElement))
+                msgString = msgElement.ToString();
+
+							JsonElement dataElement = new JsonElement();
+							if (responseData.TryGetProperty("errors", out dataElement))
+								data = dataElement;
+							else
+								data = responseData;
             }
 
+						if (context.Response.StatusCode ==
+								StatusCodes.Status404NotFound) {
+							msgString = "Resource not found";
+							data = null;
+						}
             serializedResponse = BuildResponse(true, msgString, data);
           }
 

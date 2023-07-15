@@ -36,23 +36,25 @@ public class UsersController : ControllerBase {
 		return UserAccessDTO.FromEntity(user);
   }
 
-  // [HttpPatch("{id}")]
-  // public async Task<ActionResult<UsersItem>>
-  // PatchUsersItem(long id, TodoItemPatchDTO todoDTO) {
-  //   if (await _context.UsersItems.FindAsync(id) is not TodoItem todoItem)
-  //     return NotFound();
-  //
-  //   if (todoDTO.IsCompleted is true && !todoItem.IsCompleted)
-  //     todoItem.CompletedAt = DateTime.UtcNow;
-  //   else if (todoDTO.IsCompleted is false)
-  //     todoItem.CompletedAt = null;
-  //
-  //   todoItem.Title = todoDTO.Title ?? todoItem.Title;
-  //   todoItem.Description = todoDTO.Description ?? todoItem.Description;
-  //   todoItem.UpdatedAt = DateTime.UtcNow;
-  //
-  //   await _context.SaveChangesAsync();
-  //   return todoItem;
-  // }
-	//
+  [HttpPatch()]
+  public async Task<ActionResult<UserAccessDTO>>
+  PatchUsersItem(UserPatchDTO userDTO) {
+    string? userId = HttpContext?.User.FindFirst("userID")?.Value;
+    if (userId == null) {
+      return Problem(null, null, StatusCodes.Status400BadRequest,
+                     "\"userID\" is missing from token");
+    }
+
+
+    if (await _context.Users.FindAsync(userId) is not User user)
+      return NotFound();
+
+    user.Email = userDTO.Email ?? user.Email;
+		user.FirstName = userDTO.FirstName ?? user.FirstName;
+		user.LastName = userDTO.LastName ?? user.LastName;
+    user.UpdatedAt = DateTime.UtcNow;
+
+    await _context.SaveChangesAsync();
+    return UserAccessDTO.FromEntity(user);
+  }
 }
