@@ -19,3 +19,14 @@ public sealed class UserAccessDTO {
     UpdatedAt = user.UpdatedAt,
   };
 }
+
+public sealed class UserShallowAccessDTO {
+  public string Id { get; set; } = null!;
+  public string? UserName { get; set; } = null!;
+
+  public static UserShallowAccessDTO
+  FromEntity(User user) => new UserShallowAccessDTO {
+    Id = user.Id,
+    UserName = user.UserName,
+  };
+}

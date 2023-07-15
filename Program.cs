@@ -85,6 +85,7 @@ builder.Services.AddHttpLogging(logging => {
 var app = builder.Build();
 
 app.UseHttpLogging();
+app.UseStaticFiles();
 app.UseRouting();
 
 // Configure the HTTP request pipeline.
