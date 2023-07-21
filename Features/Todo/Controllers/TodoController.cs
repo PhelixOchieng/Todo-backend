@@ -1,10 +1,13 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using Application.Core.Context;
 using Application.Core.Request;
+using Application.Core.ApiClient;
 using Todo.Models;
+using Todo.Microservices;
 
 namespace Todo.Controllers;
 
@@ -23,8 +26,6 @@ public class TodoController : ControllerBase {
       return NotFound();
     }
 
-    Console.WriteLine($"Params: {ssfParams}");
-
     string? userId = HttpContext?.User.FindFirst("userID")?.Value;
     if (userId == null) {
       return Problem(null, null, StatusCodes.Status400BadRequest,
@@ -32,20 +33,45 @@ public class TodoController : ControllerBase {
     }
 
     int? lastItemId = ssfParams.LastItemId;
-    var query = _context.TodoItems.OrderByDescending(i => i.Id).Where(
+    var query = _context.TodoItems.Where(
         i => i.UserId == userId &&
              (lastItemId != null ? i.Id < lastItemId : true));
 
     if (!string.IsNullOrEmpty(ssfParams.Search)) {
-      string searchString = ssfParams.Search.ToLower();
-      query =
-          query.Where(i => i.Title.ToLower().Contains(searchString) ||
-                           (i.Description != null
-                                ? i.Description.ToLower().Contains(searchString)
-                                : true));
+      string searchQuery = ssfParams.Search.ToLower();
+      ApiClient api = new ApiClient("http://localhost:8000", "api");
+      var response = await api.GetAsJsonAsync<
+          TodoMsApiResponse<List<MsDbTodo>>>(
+          $"/search?q={searchQuery}&user_id={userId}&limit={ssfParams.PageSize}&page={1}");
+      if (response == null) {
+        // Use exact match search instead
+        query = query.OrderByDescending(i => i.Id).Where(
+            i => i.Title.ToLower().Contains(searchQuery) ||
+                 (i.Description != null
+                      ? i.Description.ToLower().Contains(searchQuery)
+                      : true));
+      } else {
+        var msTodos = response.Data;
+        var msTodoIds = msTodos.Select(todo => todo.Id);
+        var todos = await query.Where(i => msTodoIds.Contains(i.Id))
+                        .Select(e => TodoItemShallowAccessDTO.FromEntity(e))
+                        .Take(ssfParams.PageSize)
+                        .ToListAsync();
+
+        // TODO: Optimize this workflow
+        var responseTodos = new List<TodoItemShallowAccessDTO>();
+        foreach (MsDbTodo msTodo in msTodos) {
+          Console.WriteLine($"Todo: {msTodos}");
+          var todo = todos.Find(todo => todo.Id == msTodo.Id)!;
+          responseTodos.Add(todo);
+        }
+
+        return responseTodos;
+      }
     }
 
-    return await query.Select(e => TodoItemShallowAccessDTO.FromEntity(e))
+    return await query.OrderByDescending(todo => todo.Id)
+        .Select(e => TodoItemShallowAccessDTO.FromEntity(e))
         .Take(ssfParams.PageSize)
         .ToListAsync();
   }

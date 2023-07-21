@@ -2,7 +2,7 @@ using Users.Models;
 
 namespace Todo.Models;
 
-public sealed class TodoItemShallowAccessDTO {
+public class TodoItemShallowAccessDTO {
   public long Id { get; set; }
   public string Title { get; set; } = null!;
   public string? Description { get; set; }
@@ -39,6 +39,6 @@ public sealed class TodoItemDetailsAccessDTO {
     CompletedAt = todo.CompletedAt,
     CreatedAt = todo.CreatedAt,
     UpdatedAt = todo.UpdatedAt,
-		CreatedBy = UserShallowAccessDTO.FromEntity(todo.CreatedBy)
+    CreatedBy = UserShallowAccessDTO.FromEntity(todo.CreatedBy)
   };
 }

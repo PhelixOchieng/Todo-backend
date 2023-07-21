@@ -9,10 +9,11 @@ public class TodoItem : Entity {
 
   public DateTime? CompletedAt { get; set; }
 
-	public string UserId { get; set; } = null!;
-	public User CreatedBy { get; set; } = null!;
-  
-	public bool IsCompleted {
+  public string UserId { get; set; } = null!;
+  public User CreatedBy { get; set; } = null!;
+
+  public bool IsCompleted {
     get { return CompletedAt is not null; }
   }
 }
+
