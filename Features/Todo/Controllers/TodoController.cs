@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using Application.Core.Context;
+using Application.Core.Request;
 using Todo.Models;
 
 namespace Todo.Controllers;
@@ -17,10 +18,12 @@ public class TodoController : ControllerBase {
 
   [HttpGet]
   public async Task<ActionResult<IEnumerable<TodoItemShallowAccessDTO>>>
-  GetTodoItems() {
+  GetTodoItems([FromQuery] SSFQueryParams ssfParams) {
     if (_context.TodoItems == null) {
       return NotFound();
     }
+
+    Console.WriteLine($"Params: {ssfParams}");
 
     string? userId = HttpContext?.User.FindFirst("userID")?.Value;
     if (userId == null) {
@@ -28,9 +31,22 @@ public class TodoController : ControllerBase {
                      "\"userID\" is missing from token");
     }
 
-    return await _context.TodoItems.Where(i => i.UserId == userId)
-        .OrderByDescending(i => i.CreatedAt)
-        .Select(e => TodoItemShallowAccessDTO.FromEntity(e))
+    int? lastItemId = ssfParams.LastItemId;
+    var query = _context.TodoItems.OrderByDescending(i => i.Id).Where(
+        i => i.UserId == userId &&
+             (lastItemId != null ? i.Id < lastItemId : true));
+
+    if (!string.IsNullOrEmpty(ssfParams.Search)) {
+      string searchString = ssfParams.Search.ToLower();
+      query =
+          query.Where(i => i.Title.ToLower().Contains(searchString) ||
+                           (i.Description != null
+                                ? i.Description.ToLower().Contains(searchString)
+                                : true));
+    }
+
+    return await query.Select(e => TodoItemShallowAccessDTO.FromEntity(e))
+        .Take(ssfParams.PageSize)
         .ToListAsync();
   }
 
